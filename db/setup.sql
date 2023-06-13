@@ -1,0 +1,2 @@
+DROP DATABASE IF EXISTS pokemon_etl;
+CREATE DATABASE pokemon_etl;
