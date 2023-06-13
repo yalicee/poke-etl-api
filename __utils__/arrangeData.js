@@ -1,6 +1,7 @@
 const { all } = require("axios");
 
 const arrangeMovesData = (pokemonData) => {
+  console.log(pokemonData[0]);
   const allMoves = [];
   pokemonData.forEach((pokemon) => {
     allMoves.push(pokemon.moves);
