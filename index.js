@@ -2,7 +2,7 @@ const { fetchSinglePokemon } = require("./__utils__/api");
 
 const getAllPokemon = () => {
   const pokemonArr = [];
-  for (let i = 1; i <= 125; i++) {
+  for (let i = 1; i <= 10; i++) {
     // fetchSinglePokemon(i).then((pokemon) => {
     //   pokemonArr.push(pokemon);
     // });
