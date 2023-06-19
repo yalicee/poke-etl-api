@@ -1,68 +1,19 @@
-const { getAllPokemon } = require("../index");
+const { getAllPokemon, getMovesType } = require("../index");
 const {
   arrangeMovesData,
   arrangeTypesData,
   arrangePokemonData,
   arrangePokemonTypeData,
+  arrangePokemonMovesData,
+  formatMovesData,
 } = require("../__utils__/arrangeData");
 const db = require("./index");
 const format = require("pg-format");
 
-const pokemonSeed = async () => {
-  const pokemonData = await getAllPokemon();
-
-  return db
-    .query("DROP TABLE IF EXISTS pokemon_types")
-    .then(() => {
-      return db.query("DROP TABLE IF EXISTS pokemon_moves");
-    })
-    .then(() => {
-      return db.query("DROP TABLE IF EXISTS pokemon");
-    })
-    .then(() => {
-      return db.query("DROP TABLE IF EXISTS moves");
-    })
-    .then(() => {
-      return db.query("DROP TABLE IF EXISTS types");
-    })
-    .then(() => {
-      return createMoves();
-    })
-    .then(() => {
-      return createTypes();
-    })
-    .then(() => {
-      return createPokemon();
-    })
-    .then(() => {
-      return createPokemonTypes();
-    })
-    .then(() => {
-      return createPokemonMoves();
-    })
-    .then(() => {
-      return insertMovesData(pokemonData);
-    })
-    .then(() => {
-      return insertTypesData(pokemonData);
-    })
-    .then(() => {
-      return insertPokemonData(pokemonData);
-    })
-    .then(() => {
-      return getTypesData();
-    })
-    .then(({ rows }) => {
-      return insertPokemonTypeData(pokemonData, rows);
-    })
-    .then((response) => {});
-};
-
 const createMoves = () => {
   return db.query(`CREATE TABLE moves (
     move_id SERIAL PRIMARY KEY,
-    move_name VARCHAR(255) NOT NULL UNIQUE
-  );`);
+    move_name VARCHAR(255) NOT NULL UNIQUE);`);
 };
 
 const createTypes = () => {
@@ -79,7 +30,7 @@ const createPokemon = () => {
 
 const createPokemonTypes = () => {
   return db.query(
-    `CREATE TABLE pokemon_types (pokemon_types_id INT, pokemon_id INT REFERENCES pokemon(pokemon_id), type_id INT REFERENCES types(type_id));`
+    `CREATE TABLE pokemon_types (pokemon_types_id SERIAL PRIMARY KEY, pokemon_id INT REFERENCES pokemon(pokemon_id), type_id INT REFERENCES types(type_id));`
   );
 };
 
@@ -129,4 +80,69 @@ const insertPokemonTypeData = (pokemonData, typeData) => {
   );
   return db.query(formatStr);
 };
-module.exports = { pokemonSeed };
+
+const getMoves = () => {
+  return db.query(`SELECT * FROM moves;`);
+};
+
+const insertPokemonMovesData = (pokemonData, movesData) => {
+  const arrangedPokemonMovesData = arrangePokemonMovesData(
+    pokemonData,
+    movesData
+  );
+  const formatStr = format(
+    `INSERT INTO pokemon_moves (pokemon_id, move_id) VALUES %L`,
+    arrangedPokemonMovesData
+  );
+  return db.query(formatStr);
+};
+
+const alterMovesTable = async (movesData) => {
+  await db.query(
+    `ALTER TABLE moves ADD COLUMN type_id INT REFERENCES types(type_id);`
+  );
+  for (const move of movesData) {
+    await db.query(`UPDATE moves SET type_id = $1 WHERE move_name = $2;`, [
+      move.type_id,
+      move.name,
+    ]);
+  }
+};
+
+const pokemonSeed = async () => {
+  try {
+    const pokemonData = await getAllPokemon();
+
+    await db.query("DROP TABLE IF EXISTS pokemon_types");
+    await db.query("DROP TABLE IF EXISTS pokemon_moves");
+    await db.query("DROP TABLE IF EXISTS pokemon");
+    await db.query("DROP TABLE IF EXISTS moves");
+    await db.query("DROP TABLE IF EXISTS types");
+
+    await createMoves();
+    await createTypes();
+    await createPokemon();
+    await createPokemonTypes();
+    await createPokemonMoves();
+
+    await insertMovesData(pokemonData);
+    await insertTypesData(pokemonData);
+    await insertPokemonData(pokemonData);
+
+    const typesResult = await getTypesData();
+    const typesData = typesResult.rows;
+    await insertPokemonTypeData(pokemonData, typesData);
+    const movesResult = await getMoves();
+    const movesData = movesResult.rows;
+    await insertPokemonMovesData(pokemonData, movesData);
+
+    const movesTypeResult = await getMovesType(pokemonData);
+    const formattedMoves = formatMovesData(typesData, movesTypeResult);
+    await alterMovesTable(formattedMoves);
+    console.log("Pokemon data seeded successfully!");
+  } catch (error) {
+    console.error("An error occurred while seeding Pokemon data:", error);
+  }
+};
+
+module.exports = { pokemonSeed, getTypesData };

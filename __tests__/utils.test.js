@@ -18,7 +18,7 @@ describe("arrangeMovesData", () => {
           id: 1,
         },
       ])
-    ).toEqual(["razor-wind"]);
+    ).toEqual([["razor-wind"]]);
   });
   test("Should return multiple moves when passed an array of a single pokemon object with multiple moves", () => {
     expect(
@@ -34,7 +34,7 @@ describe("arrangeMovesData", () => {
           id: 1,
         },
       ])
-    ).toEqual(["razor-wind", "tackle", "hydro-blast"]);
+    ).toEqual([["razor-wind"], ["tackle"], ["hydro-blast"]]);
   });
   test("Should return multiple moves when passed an array of pokemon objects", () => {
     expect(
@@ -60,7 +60,12 @@ describe("arrangeMovesData", () => {
           id: 2,
         },
       ])
-    ).toEqual(["razor-wind", "tackle", "hydro-blast", "lightning-bolt"]);
+    ).toEqual([
+      ["razor-wind"],
+      ["tackle"],
+      ["hydro-blast"],
+      ["lightning-bolt"],
+    ]);
   });
   test("The output array shouldn't contain duplicate moves", () => {
     expect(
@@ -86,7 +91,7 @@ describe("arrangeMovesData", () => {
           id: 2,
         },
       ])
-    ).toEqual(["tackle", "hydro-blast", "lightning-bolt"]);
+    ).toEqual([["tackle"], ["hydro-blast"], ["lightning-bolt"]]);
   });
   test("should return a new array", () => {
     const input = [

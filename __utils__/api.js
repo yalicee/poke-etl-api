@@ -24,6 +24,23 @@ const fetchSinglePokemon = (pokeId) => {
     });
 };
 
+const fetchSingleMove = async ({ url }) => {
+  const { data } = await pokeApi.get(`${url}`);
+  return {
+    name: data.name,
+    type: data.type.name,
+  };
+};
+
+const fetchAllMoves = async () => {
+  const {
+    data: { results },
+  } = await pokeApi.get(`/move?limit=100000`);
+  return results;
+};
+
 module.exports = {
   fetchSinglePokemon,
+  fetchAllMoves,
+  fetchSingleMove,
 };
