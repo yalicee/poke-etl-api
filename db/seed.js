@@ -3,15 +3,12 @@ const {
   arrangeMovesData,
   arrangeTypesData,
   arrangePokemonData,
+  arrangePokemonTypeData,
 } = require("../__utils__/arrangeData");
 const db = require("./index");
 const format = require("pg-format");
 
 const pokemonSeed = async () => {
-  // getAllPokemon().then((result) => {
-  //   console.log(arrangeMovesData(result));
-  // });
-
   const pokemonData = await getAllPokemon();
 
   return db
@@ -51,7 +48,14 @@ const pokemonSeed = async () => {
     })
     .then(() => {
       return insertPokemonData(pokemonData);
-    });
+    })
+    .then(() => {
+      return getTypesData();
+    })
+    .then(({ rows }) => {
+      return insertPokemonTypeData(pokemonData, rows);
+    })
+    .then((response) => {});
 };
 
 const createMoves = () => {
@@ -69,7 +73,7 @@ const createTypes = () => {
 
 const createPokemon = () => {
   return db.query(
-    `CREATE TABLE pokemon (pokemon_id INT, pokemon_name VARCHAR(255), sprite VARCHAR(255), height INT, weight INT, type_id INT REFERENCES pokemon_types(pokemon_types_id) NOT NULL, move_id INT REFERENCES moves(move_id) NOT NULL);`
+    `CREATE TABLE pokemon (pokemon_id INT UNIQUE, pokemon_name VARCHAR(255), sprite VARCHAR(255), height INT, weight INT);`
   );
 };
 
@@ -104,10 +108,25 @@ const insertTypesData = (typesData) => {
 };
 
 const insertPokemonData = (pokemonData) => {
-  arrangePokemonData(pokemonData);
+  const arrangedPokemonData = arrangePokemonData(pokemonData);
+  const formatStr = format(
+    `INSERT INTO pokemon (pokemon_id, pokemon_name, height, weight, sprite) VALUES %L;`,
+    arrangedPokemonData
+  );
+  return db.query(formatStr);
 };
 
-module.exports = { pokemonSeed };
+const getTypesData = () => {
+  return db.query(`SELECT * FROM types;`);
+};
 
-//Many pokemon have many types && many types have many pokemon
-//SELECT * FROM pokemon WHERE pokemon_id = 3
+const insertPokemonTypeData = (pokemonData, typeData) => {
+  const arrangedPokemonTypeData = arrangePokemonTypeData(pokemonData, typeData);
+
+  const formatStr = format(
+    `INSERT INTO pokemon_types (pokemon_id, type_id) VALUES %L;`,
+    arrangedPokemonTypeData
+  );
+  return db.query(formatStr);
+};
+module.exports = { pokemonSeed };

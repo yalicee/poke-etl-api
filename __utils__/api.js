@@ -14,7 +14,7 @@ const fetchSinglePokemon = (pokeId) => {
         height,
         weight,
         moves: moves.map((move) => move.move.name),
-        sprites: sprites.front_default,
+        sprite: sprites.front_default,
         types: types.map((type) => type.type.name),
         id,
       };

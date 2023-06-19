@@ -14,9 +14,38 @@ const arrangeTypesData = (pokemonData) => {
 };
 
 const arrangePokemonData = (pokemonData) => {
-  const allPokemon = pokemonData.map((pokeObj) => Object.values(pokeObj));
-  console.log(allPokemon);
+  const allPokemon = pokemonData.map(({ id, name, height, weight, sprite }) => [
+    id,
+    name,
+    height,
+    weight,
+    sprite,
+  ]);
   return allPokemon;
 };
 
-module.exports = { arrangeMovesData, arrangeTypesData, arrangePokemonData };
+const arrangePokemonTypeData = (pokemonData, typeData) => {
+  const lookup = lookupCreator(typeData);
+  const finalPokemonTypeData = [];
+  pokemonData.forEach((pokemon) => {
+    pokemon.types.forEach((type) => {
+      finalPokemonTypeData.push([pokemon.id, lookup[type]]);
+    });
+  });
+  return finalPokemonTypeData;
+};
+
+const lookupCreator = (typeData) => {
+  const lookupObj = {};
+  typeData.forEach((type) => {
+    lookupObj[type.type_name] = type.type_id;
+  });
+  return lookupObj;
+};
+
+module.exports = {
+  arrangeMovesData,
+  arrangeTypesData,
+  arrangePokemonData,
+  arrangePokemonTypeData,
+};
